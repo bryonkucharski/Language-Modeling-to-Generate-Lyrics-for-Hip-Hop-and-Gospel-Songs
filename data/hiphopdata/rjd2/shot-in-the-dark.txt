@@ -1,0 +1,41 @@
+[Shoot to ki-kill, to-kill] {x4} 
+ (Shoot to kill) 
+ Chief: 
+ Let's go. 
+ Officer 1: 
+ He's got his hands up, Chief. Take it easy. 
+ Chief: 
+ All right you! 
+ Man: 
+ No need to shoot me officer, I was just-- 
+ Chief: 
+ Don't you be tellin' me what not to do, man. 
+ Just walk forward and keep them hands high. 
+ Man: 
+ I saw the man... the assalant. 
+ Chief: 
+ Shut your mouth. 
+ Man: 
+ But I was just chasing him 
+ Chief: 
+ I told you shut your mouth! (Phantom) arrest him. 
+ Officer 2: 
+ He's clean. 
+ Chief: 
+ Cuff him. 
+ Man: 
+ But wait, I'm not the one you're looking for. 
+ Chief: 
+ Shut your mouth, boy! 
+ Man: 
+ You're making a mistake officer. 
+ The man you want is getting away. 
+ He's about 5'7". [5'7"] He weighs--- 
+ Chief: 
+ Get him in the car! 
+ Man: 
+ Now look, my name is Benson. 
+ I just got here from-- {punch in face} 
+ Chief: 
+ I asked you to shut your mouth, boy. 
+ (Mouth boy] You gonna do it? [do it)
