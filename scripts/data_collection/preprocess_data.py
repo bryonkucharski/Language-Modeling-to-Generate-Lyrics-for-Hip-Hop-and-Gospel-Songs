@@ -14,54 +14,55 @@ def clean_song_single_file(song, output_file, detect_foriegn = False):
     """
     Takes the lyrics of one song and appends them to single text file output file
 
-    Removes any special punc
-    Removes foreign words
-    Remove anything in paraenthesis . Rap often has "adlibs"
-    Make all words lowercase
+    
+    
     """
     with open(song,"r",encoding='utf-8', errors='ignore') as s:
-        with open(output_file, "a",encoding='utf-8', errors='ignore') as f:
+        with open(output_file, "a",encoding='latin-1', errors='ignore') as f:
             lines = s.read().splitlines()
             total_words = 0
             for line in lines:
-                if line == '\n':
-                    continue
+
 
                 #this gets rid of anything (inside paraenthesis) or [inside brackets]
                 #this is normally an 'ab-lib' which we wont count as data
                 # or it is describing an artist, which we dont need
                 line = re.sub("[\(\[].*?[\)\]]", "", line)
-                if len(line) > 1:
-                    
-                    #the following is taken with help from: https://machinelearningmastery.com/how-to-develop-a-word-level-neural-language-model-in-keras/
-                    tokens = line.split()
-                    # remove punctuation from each token
-                    table = str.maketrans('', '', string.punctuation)
-                    tokens = [w.translate(table) for w in tokens]
-                    # remove remaining tokens that are not alphabetic
-                    tokens = [word for word in tokens if word.isalpha()]
-                    # make lower case
-                    tokens = [word.lower() for word in tokens]
+              
+        
+                #the following is taken with help from: https://machinelearningmastery.com/how-to-develop-a-word-level-neural-language-model-in-keras/
+                tokens = line.split()
+                # remove punctuation from each token
+                table = str.maketrans('', '', string.punctuation)
+                tokens = [w.translate(table) for w in tokens]
+                # remove remaining tokens that are not alphabetic
+                tokens = [word for word in tokens if word.isalpha()]
+                # make lower case
+                tokens = [word.lower() for word in tokens]
 
-                    newline = " ".join(tokens)
-                    if detect_foriegn:
-                        try:
-                            lg = detect_langs(newline)
-                            for item in lg:
-                                if item.lang != "en":
-                                
-                                    print(newline + " is not detected as english", item.lang)
-                                    continue
-                        except:
-                            print("Cannot detect:" + newline)
-                            continue
-                    if len(tokens) > 0:
-                        total_words += len(tokens)
-                        f.write(newline + "\n")
+                newline = " ".join(tokens)
+                if detect_foriegn:
+                    try:
+                        lg = detect_langs(newline)
+                        for item in lg:
+                            if item.lang != "en":
+                            
+                                print(newline + " is not detected as english", item.lang)
+                                continue
+                    except:
+                        print("Cannot detect:" + newline)
+                        continue
+
+                total_words += len(tokens)
+                if len(newline) <= 1:
+                    print(newline)
+                    continue
+                f.write(newline + "\n")
+            f.write('-\n')
             
     return total_words
     
-def generate_dataset(path = '../../data/hiphopdata',output_folder = "../../data/hiphop_dataset_bysong/total/"):
+def generate_dataset(path = '../../data/hiphopdata',output_file = "../../data/hiphop_dataset_bysong/total/"):
     '''
     Iterate through path
     '''
@@ -80,38 +81,60 @@ def generate_dataset(path = '../../data/hiphopdata',output_folder = "../../data/
             append to one large .txt file
             collect stats about data (number of words, songs, artists)
     '''
+    #output_file = 'hip_hop_dataset_single_file_v2.txt'
     for artist_folder in artist_folders:
         print(number_artists)
         for song in os.listdir(path + "/" +artist_folder):
             input_path = path + "/" +artist_folder + "/" +song
-            output_path = output_folder +song
-            open(output_path, "w+").close()
-            number_words += clean_song_single_file(input_path, output_path)
+            #output_path = output_folder +song
+            number_words += clean_song_single_file(input_path, output_file= output_file)
             number_songs += 1
         number_artists += 1
 
 
     print(number_artists,number_songs,number_words)
 
-def test_train_split_single_file(dataset, test_percent):
+def test_train_split_single_file(dataset, test_percent, by = 'line'):
     '''
     dataset is a .txt file with every song
     '''
     with open(dataset, "r",encoding='utf-8', errors='ignore') as f:
         with open(dataset[:-4] + "_test.txt", "w",encoding='utf-8', errors='ignore') as a:
             with open(dataset[:-4] + "_train.txt", "w",encoding='utf-8', errors='ignore') as b:
-                lines = f.read().splitlines()
-                length = len(lines)
-                print(length)
-                np.random.shuffle(lines)
-                num_test = int(length*test_percent)
-                test = lines[num_test:]
-                train = lines[:num_test]
+                with open(dataset[:-4] + "_valid.txt", "w", encoding='utf-8', errors='ignore') as c:
+                    if by == 'line':
+                        lines = f.read().splitlines()
+                    elif by == 'song':
+                        lines = f.read().split('-\n')
 
-                b.write('\n'.join(str(line) for line in train))
-                a.write('\n'.join(str(line) for line in test))
-                print(len(test))
-                print(len(train))
+                    length = len(lines)
+                    print(length)
+                    np.random.shuffle(lines)
+                    num_test = int(length*test_percent)
+
+                    train = lines[num_test:]
+                    test = lines[:num_test]
+                    #print(len(test))
+                    #print(len(train))
+
+                    train_length = len(train)
+                    num_valid = int(train_length*.1)
+
+                    train = train[num_valid:]
+                    valid = train[:num_valid]
+
+
+                    b.write('-\n'.join(str(line) for line in train))
+                    a.write('-\n'.join(str(line) for line in test))
+                    c.write('-\n'.join(str(line) for line in valid))
+
+
+                    print(len(train))
+                    print(len(valid))
+                    print(len(test))
+
+                    assert len(train) + len(valid) + len(test) == length
+
 
 def test_train_split_folders(folder, test_percent):
     '''
@@ -155,14 +178,17 @@ def test_train_split_folders(folder, test_percent):
             # try creating parent directories
             os.makedirs(os.path.dirname(dest))
             shutil.copy(src, dest)
+
+
                 
-#test_train_split('../../data/hip_hop_dataset_total.txt', .2)
-#generate_dataset() #1
+
+#generate_dataset(output_file = 'hip_hop_dataset_single_file_v2.txt') #1
+#test_train_split_single_file('hip_hop_dataset_single_file_v2.txt', .2, by = 'song')
 #test_train_split_folders("../../data/hiphop_dataset_bysong/total/",.2) #2
 
 
-generate_dataset('../../data/gospeldata',"../../data/gospel_dataset_bysong/total/")
-test_train_split_folders("../../data/gospel_dataset_bysong/total/",.2) #2
+generate_dataset('../../data/gospeldata', output_file = '../../data/gospel_dataset_single_file_v2.txt')
+test_train_split_single_file("../../data/gospel_dataset_single_file_v2.txt",.2,  by = 'song') #2
 
 
 
